@@ -128,6 +128,10 @@ public class Desk {
                 });
     }
 
+    public void processSeeds(BiConsumer<Integer, Integer> processor) {
+        IntStream.range(0, desk.length).forEach(i -> processor.accept(i, desk[i]));
+    }
+
     public void putIntoBasket(int player, int globalPit) {
         desk[getBasketIdx(player)] += desk[globalPit];
         desk[globalPit] = 0;
