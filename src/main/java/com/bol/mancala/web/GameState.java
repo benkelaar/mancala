@@ -54,95 +54,48 @@ public class GameState {
         return error;
     }
 
-    public void setError(String error) {
-        this.error = error;
-    }
-
     public boolean isGameStarted() {
         return gameStarted;
-    }
-
-    public void setGameStarted(boolean gameStarted) {
-        this.gameStarted = gameStarted;
     }
 
     public boolean isGameFinished() {
         return gameFinished;
     }
 
-    public void setGameFinished(boolean gameFinished) {
-        this.gameFinished = gameFinished;
-    }
-
     public boolean isYourTurn() {
         return yourTurn;
-    }
-
-    public void setYourTurn(boolean yourTurn) {
-        this.yourTurn = yourTurn;
     }
 
     public int getTotalSeeds() {
         return totalSeeds;
     }
 
-    public void setTotalSeeds(int totalSeeds) {
-        this.totalSeeds = totalSeeds;
-    }
-
     public int[] getYourSeeds() {
         return yourSeeds;
-    }
-
-    public void setYourSeeds(int[] yourSeeds) {
-        this.yourSeeds = yourSeeds;
     }
 
     public int getYourBasket() {
         return yourBasket;
     }
 
-    public void setYourBasket(int yourBasket) {
-        this.yourBasket = yourBasket;
-    }
-
     public int[] getOpponentSeeds() {
         return opponentSeeds;
-    }
-
-    public void setOpponentSeeds(int[] opponentSeeds) {
-        this.opponentSeeds = opponentSeeds;
     }
 
     public int getOpponentBasket() {
         return opponentBasket;
     }
 
-    public void setOpponentBasket(int opponentBasket) {
-        this.opponentBasket = opponentBasket;
-    }
-
     public String getYourName() {
         return yourName;
-    }
-
-    public void setYourName(String yourName) {
-        this.yourName = yourName;
     }
 
     public String getOpponentName() {
         return opponentName;
     }
 
-    public void setOpponentName(String opponentName) {
-        this.opponentName = opponentName;
-    }
-
     public int getLastTurn() {
         return lastTurn;
     }
 
-    public void setLastTurn(int lastTurn) {
-        this.lastTurn = lastTurn;
-    }
 }

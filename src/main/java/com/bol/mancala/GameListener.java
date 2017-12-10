@@ -10,7 +10,8 @@ public interface GameListener {
      * Or it is possible to make a new turn right from the body - in this case
      * it will be a sync game.
      *
-     * @param game
+     * You need the {@link GamePlayer} object ot get an access to the game.
+     * This method just notifies you.
      */
-    void stateChanged(Game game);
+    void stateChanged();
 }

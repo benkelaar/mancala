@@ -1,6 +1,6 @@
 package com.bol.mancala.web;
 
-import com.bol.mancala.DefaultGamePlayer;
+import com.bol.mancala.Game;
 import com.bol.mancala.GamePlayer;
 import org.junit.Test;
 
@@ -12,7 +12,7 @@ public class WebGamePoolImplTest {
 
     @Test
     public void testPoolShouldCreateGameForFirstPlayer(){
-        GamePlayer server = pool.createGameForUser("1", new DefaultGamePlayer("player"));
+        GamePlayer server = pool.createGameForUser("1", "player");
         verify(pool, times(1)).createGame();
         assertEquals("player", server.getName());
         assertEquals("player", pool.findUser("1").getName());
@@ -20,9 +20,9 @@ public class WebGamePoolImplTest {
 
     @Test
     public void testPoolShouldUseGameForSecondPlayer(){
-        GamePlayer first = pool.createGameForUser("1", new DefaultGamePlayer("player1"));
+        GamePlayer first = pool.createGameForUser("1", "player1");
         reset(pool);
-        GamePlayer second = pool.createGameForUser("2", new DefaultGamePlayer("player2"));
+        GamePlayer second = pool.createGameForUser("2", "player2");
         verify(pool, times(0)).createGame();
         assertEquals("player1", pool.findUser("1").getName());
         assertEquals("player2", pool.findUser("2").getName());
@@ -35,9 +35,17 @@ public class WebGamePoolImplTest {
 
     @Test
     public void testCleanupShouldDisconnectFromGame(){
-        DefaultGamePlayer player = spy(new DefaultGamePlayer("player"));
-        pool.createGameForUser("1", player);
-        assertEquals("player", pool.findUser("1").getName());
+        Game gameMock = mock(Game.class);
+        GamePlayer playerMock = mock(GamePlayer.class);
+        doReturn(playerMock).when(gameMock).registerForGame(anyString());
+
+        WebGamePoolImpl pool = new WebGamePoolImpl() {
+            @Override
+            protected Game createGame() {
+                return gameMock;
+            }
+        };
+        GamePlayer player = pool.createGameForUser("1", "player");
 
         //cleanup
         pool.cleanupUserData("1");

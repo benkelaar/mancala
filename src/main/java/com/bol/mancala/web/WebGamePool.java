@@ -1,6 +1,7 @@
 package com.bol.mancala.web;
 
 import com.bol.mancala.GamePlayer;
+import com.bol.mancala.impl.GamePlayerImpl;
 
 /**
  * Here we'd like to store players.
@@ -11,10 +12,10 @@ public interface WebGamePool {
      * Find or create a game for the new user. Its always possible to do.
      *
      * @param sessionId  session id for user
-     * @param player     game API object for player
-     * @return just return input parameter player
+     * @param nickname player nickname
+     * @return API object to access to the game
      */
-    GamePlayer createGameForUser(String sessionId, GamePlayer player);
+    GamePlayer createGameForUser(String sessionId, String nickname);
 
     /**
      * Find user info by sessionId

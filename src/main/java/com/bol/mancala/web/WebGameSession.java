@@ -1,7 +1,9 @@
 package com.bol.mancala.web;
 
-import com.bol.mancala.Game;
+import com.bol.mancala.GameListener;
+import com.bol.mancala.impl.GameImpl;
 import com.bol.mancala.GamePlayer;
+import com.bol.mancala.impl.GamePlayerImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,21 +40,25 @@ public class WebGameSession extends TextWebSocketHandler {
         logger.info("Connection established (sessionId = '{}', username = '{}')", session.getId(), username);
         username = username == null || username.isEmpty() ? "unknown" : username;
 
-        //create listener
-        GamePlayer player = new GamePlayer(username) {
-            @Override
-            public void stateChanged(Game game) {
-                sendGameState(session, new GameState(this));
-            }
-        };
+        try {
+            //register for some game
+            GamePlayer player = gamePool.createGameForUser(session.getId(), username);
 
-        // register for some game
-        gamePool.createGameForUser(session.getId(), player);
+            //create listener
+            player.getGame().addGameListener(() -> sendGameState(session, new GameState(player)));
+
+            //send first notification
+            sendGameState(session, new GameState(player));
+        }catch (Exception e){
+            sendGameState(session, new GameState(e));
+            session.close();
+        }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         logger.info("Connection closed (sessionId = '{}')", session.getId());
+
         //just delete everything about this session
         gamePool.cleanupUserData(session.getId());
     }

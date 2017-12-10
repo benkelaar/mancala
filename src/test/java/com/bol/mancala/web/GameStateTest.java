@@ -1,6 +1,7 @@
 package com.bol.mancala.web;
 
 import com.bol.mancala.GamePlayer;
+import com.bol.mancala.impl.GamePlayerImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,7 +12,7 @@ public class GameStateTest {
 
     @Test
     public void testCreateStateWithException(){
-        GamePlayer player = mock(GamePlayer.class);
+        GamePlayer player = mock(GamePlayerImpl.class);
         doReturn(true).when(player).isMyTurn();
         doReturn(true).when(player).isGameStarted();
         doReturn(false).when(player).isGameFinished();
@@ -22,6 +23,7 @@ public class GameStateTest {
         doReturn(new int[]{1,2,3,4,5,6}).when(player).getMySeeds();
         doReturn(new int[]{6,5,4,3,2,1}).when(player).getOpponentSeeds();
         doReturn(72).when(player).getTotalSeeds();
+        doReturn(4).when(player).getLastTurn();
 
         GameState state = new GameState(new RuntimeException("Exception"), player);
         assertEquals("Exception", state.getError());
@@ -35,11 +37,19 @@ public class GameStateTest {
         assertArrayEquals(player.getMySeeds(), state.getYourSeeds());
         assertArrayEquals(player.getOpponentSeeds(), state.getOpponentSeeds());
         assertEquals(player.getTotalSeeds(), state.getTotalSeeds());
+        assertEquals(player.getLastTurn(), state.getLastTurn());
     }
 
     @Test
     public void testCreateStateWithoutUser(){
         GameState state = new GameState(new RuntimeException("exception"), null);
+        assertEquals("exception", state.getError());
+        assertNull(state.getYourName());
+    }
+
+    @Test
+    public void testCreateStateWithThrowableOnly(){
+        GameState state = new GameState(new RuntimeException("exception"));
         assertEquals("exception", state.getError());
         assertNull(state.getYourName());
     }

@@ -73,11 +73,11 @@ function updateDesk(game){
         $("#opponent-name").removeClass("turn");
         $("#my-name").removeClass("turn");
         if(game.yourBasket+ game.opponentBasket !=game.totalSeeds){
-            alert("Game closed.\nLooks like your opponent has left.\nTo start another game reload the page.");
+            alert("Game closed.\nLooks like your opponent has left the game.\nTo start another game reload the page.");
         } else if (game.yourBasket>game.opponentBasket){
-            alert("Your win!");
+            alert("Your win !");
         } else {
-            alert("You lose (");
+            alert("You lost :(");
         }
     }
 }

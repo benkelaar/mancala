@@ -1,4 +1,4 @@
-package com.bol.mancala;
+package com.bol.mancala.impl;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -11,11 +11,11 @@ import static org.junit.Assert.*;
  * Created by kopernik on 05/12/2017.
  */
 public class DeskTest {
-    private Desk6x6 desk;
+    private DeskImpl desk;
 
     @Before
     public void setup(){
-        desk = new Desk6x6();
+        desk = new DeskImpl();
     }
 
     @Test
@@ -33,7 +33,7 @@ public class DeskTest {
 
     @Test
     public void testCustomInitialStateShouldBeOK(){
-        desk = new Desk6x6(10, 2);
+        desk = new DeskImpl(10, 2);
         IntStream.range(0, 9).forEach(i -> {
             assertEquals(desk.getSeeds(0, i), 2);
             assertEquals(desk.getSeeds(1, i), 2);
@@ -82,31 +82,31 @@ public class DeskTest {
     public void testProcessSeedsShouldBeCycled(){
         // initial state [6,6,6,6,6,6,0, 6,6,6,6,6,6,0]
 
-        int lastIdx = desk.processSeeds(0, 0);
+        boolean lastIdxBasket = desk.processSeeds(0, 0);
         //                >         |
         // initial state [0,7,7,7,7,7,1, 6,6,6,6,6,6,0]
         //                0 1 2 3 4 5 6  0 1 2 3 4 5 6
-        assertEquals(6, lastIdx);
+        assertEquals(true, lastIdxBasket);
         assertEquals(0, desk.getSeeds(0, 0));
         IntStream.range(1,5).forEach(i -> assertEquals(7, desk.getSeeds(0, i)));
         assertEquals(1, desk.getBasket(0));
         assertEquals(6, desk.getSeeds(1, 0));
 
-        lastIdx = desk.processSeeds(0, 4);
+        lastIdxBasket = desk.processSeeds(0, 4);
         //                        >              |
         // initial state [0,7,7,7,0,8,2, 7,7,7,7,7,6,0]
         //                0 1 2 3 4 5 6  0 1 2 3 4 5 6
-        assertEquals(11, lastIdx);
+        assertEquals(false, lastIdxBasket);
         assertEquals(0, desk.getSeeds(0, 4));
         assertEquals(8, desk.getSeeds(0, 5));
         assertEquals(2, desk.getBasket(0));
         IntStream.range(0,4).forEach(i -> assertEquals(7, desk.getSeeds(1, i)));
 
-        lastIdx = desk.processSeeds(1, 3);
+        lastIdxBasket = desk.processSeeds(1, 3);
         //                      |              >
         // initial state [1,8,8,8,0,8,2, 7,7,7,0,8,7,1]
         //                0 1 2 3 4 5 6  0 1 2 3 4 5 6
-        assertEquals(3, lastIdx);
+        assertEquals(false, lastIdxBasket);
         assertEquals(0, desk.getSeeds(1, 3));
         assertEquals(8, desk.getSeeds(1, 4));
         assertEquals(7, desk.getSeeds(1, 5));
@@ -117,7 +117,7 @@ public class DeskTest {
 
     @Test
     public void testNoSeedShouldBeForOpponentBasket() {
-        desk = new Desk6x6(new int[]{
+        desk = new DeskImpl(new int[]{
                 0, 1, 2, 3, 4, 10, 0,
                 0, 1, 2, 3, 4, 5, 0});
         desk.processSeeds(0, 5);
@@ -128,7 +128,7 @@ public class DeskTest {
 
     @Test
     public void testLastSeedInEmptyPitShouldCaptureSeeds() {
-        desk = new Desk6x6(new int[]{
+        desk = new DeskImpl(new int[]{
                 0, 1, 0, 3, 4, 5, 0,
                 0, 1, 2, 3, 4, 5, 0});
         desk.processSeeds(0, 1);
@@ -140,7 +140,7 @@ public class DeskTest {
     @Test
     public void testLastSeedInBasketShouldntCaptureOpponentBasket() {
         //Funny case))
-        desk = new Desk6x6(new int[]{
+        desk = new DeskImpl(new int[]{
                 0, 1, 2, 3, 4, 5, 0,
                 0, 1, 2, 3, 4, 5, 6});
         desk.processSeeds(0, 3);
@@ -150,7 +150,7 @@ public class DeskTest {
 
     @Test
     public void testLastSeedOnOppositeSideShouldntCaptureSeeds() {
-        desk = new Desk6x6(new int[]{
+        desk = new DeskImpl(new int[]{
                 0, 0, 0, 0, 0, 0, 0,
                 0, 1, 2, 3, 4, 5, 0});
         desk.processSeeds(1, 4);

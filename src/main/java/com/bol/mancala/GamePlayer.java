@@ -1,94 +1,33 @@
 package com.bol.mancala;
 
-/**
- * API for a player to access to a game.
- *
- */
-public abstract class GamePlayer implements GameListener{
+public interface GamePlayer {
+    void turn(int pit);
 
-    private Game game;
-    private int player;
-    private String name;
+    int getSeeds(int pit);
 
-    protected GamePlayer(String name) {
-        this.name = name;
-    }
+    int getBasket();
 
-    protected void setGame(Game game){
-        this.game = game;
-    }
+    boolean isMyTurn();
 
-    protected void setPlayer(int player){
-        this.player = player;
-    }
+    int[] getMySeeds();
 
-    public void turn(int pit) {
-        this.game.turn(this, pit);
-    }
+    int[] getOpponentSeeds();
 
-    public int getSeeds(int pit){
-        return this.game.getSeeds(this, pit);
-    }
+    int getOpponentBasket();
 
-    public int getBasket() {
-        return this.game.getBasket(getPlayer());
-    }
+    void disconnect();
 
-    public boolean isMyTurn(){
-        return this.game.isPlayerTurn(this);
-    }
+    String getName();
 
-    public int[] getMySeeds(){
-        return game.getPlayersPits(player);
-    }
+    String getOpponentName();
 
-    public int[] getOpponentSeeds(){
-        return game.getPlayersPits(game.opponentIdx(getPlayer()));
-    }
+    boolean isGameFinished();
 
-    public int getOpponentBasket(){
-        return game.getBasket(game.opponentIdx(getPlayer()));
-    }
+    boolean isGameStarted();
 
-    public void disconnect() {
-        game.disconnect(this);
-    }
+    int getTotalSeeds();
 
-    public String getName() {
-        return name;
-    }
+    int getLastTurn();
 
-    @Override
-    public final boolean equals(Object obj) {
-        return super.equals(obj);
-    }
-
-    @Override
-    public final int hashCode() {
-        return super.hashCode();
-    }
-
-    public int getPlayer() {
-        return player;
-    }
-
-    public String getOpponentName() {
-        return game.getPlayerName(game.opponentIdx(player));
-    }
-
-    public boolean isGameFinished() {
-        return game.isFinished();
-    }
-
-    public boolean isGameStarted() {
-        return game.isStarted();
-    }
-
-    public int getTotalSeeds() {
-        return game.getTotalSeeds();
-    }
-
-    public int getLastTurn(){
-        return game.lastTurn();
-    }
+    Game getGame();
 }

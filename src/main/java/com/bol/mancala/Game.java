@@ -1,194 +1,43 @@
 package com.bol.mancala;
 
-import java.util.Arrays;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.IntStream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.security.krb5.internal.crypto.Des;
-
 /**
- * Created by kopernik on 06/12/2017.
+ * The main purpose of the class is to sync access of 2 players and
+ * provide methods to change game state and get notifications.
+ *
  */
-public class Game {
-    private static final Logger logger = LoggerFactory.getLogger(Game.class);
-    private int firstTurn;
+public interface Game {
 
-    private Desk desk;
+    /**
+     * Register to the game.
+     * Will accept first 2 player and return them API objects to access to the game.
+     * @param name player name
+     * @return new object to have an access to the game
+     * @throws IllegalStateException if the game is already full
+     */
+    GamePlayer registerForGame(String name) throws IllegalStateException;
 
-    private volatile byte playersCount;
-    private int lastTurn;
-    private AtomicBoolean started = new AtomicBoolean();
-    private AtomicBoolean finished = new AtomicBoolean();
+    /**
+     * Is game started (there are 2 players in the game)
+     */
+    boolean isStarted();
 
-    private ArrayBlockingQueue<GamePlayer> players = new ArrayBlockingQueue<>(2);
+    /**
+     * Is game finished (the players reach the final turn and got the results or
+     * one of them has left the game)
+     */
+    boolean isFinished();
 
-    public Game(Desk desk) {
-        this(desk, (int)(Math.random() * desk.getMaxPlayers()));
-    }
+    int getPitsCountPerPlayer();
 
-    public Game(Desk desk, int firstTurn) {
-        this.desk = desk;
-        this.firstTurn = firstTurn % desk.getMaxPlayers();
-        players = new ArrayBlockingQueue<>(desk.getMaxPlayers());
-    }
+    /**
+     * Register for game notifications.
+     * @param listener listener to add
+     */
+    void addGameListener(GameListener listener);
 
-    public GamePlayer registerForGame(GamePlayer player) {
-        if(!players.offer(player)) {
-            throw new IllegalStateException("Game is fool");
-        }
-        player.setGame(this);
-        player.setPlayer(playersCount++);
-        if(!checkStarted()){
-            player.stateChanged(this);
-        }
-        return player;
-    }
-
-    private boolean checkStarted() {
-        boolean check = !started.get() && !finished.get() && players.size() == desk.getMaxPlayers();
-        if(check && this.started.compareAndSet(false, true)){
-            if(firstTurn>0){
-                nextPlayerTurn();
-            };
-            notifyListeners();
-            return true;
-        }
-        return false;
-    }
-
-    private void notifyListeners() {
-        players.stream().forEach(x -> {
-            try{
-                x.stateChanged(this);
-            }catch (RuntimeException e) {
-                //its not our business, listener should'n produxe errors
-                logger.warn("Some problem in listeners", e);
-            }
-        });
-    }
-
-    public boolean isPlayerTurn(GamePlayer player) {
-        return started.get() && !finished.get() && players.peek() == player;
-    }
-
-    public int getSeedsOnTheDesk(){
-        return desk.getTotalSeedsOnDesk();
-    }
-
-    protected int[] getPlayersPits(int player){
-        return IntStream.range(0, desk.getPitsPerPlayer())
-                .map(i -> desk.getSeeds(player, i))
-                .toArray();
-    }
-
-    protected int opponentIdx(int player){
-        return (++player) % desk.getMaxPlayers();
-    }
-
-
-    public int getSeeds(GamePlayer player, int pit){
-        return desk.getSeeds(player.getPlayer(), pit);
-    }
-
-    public int getBasket(int player) {
-        return desk.getBasket(player);
-    }
-
-    private void checkPlayer(GamePlayer player) {
-        if(!players.contains(player)){
-            throw new IllegalArgumentException(
-                    String.format("Player '%s' do not play in this game", player.getName()));
-        }
-    }
-
-    protected synchronized void turn(GamePlayer player, int pitIdx) {
-        if (!started.get()) {
-            throw new IllegalStateException("Waiting for users");
-        }
-        if (!isPlayerTurn(player)) {
-            throw new IllegalArgumentException("It's not your turn");
-        }
-        if (desk.getSeeds(player.getPlayer(), pitIdx) == 0) {
-            return;
-        }
-
-        lastTurn = pitIdx;
-
-        int lastProcessed = desk.processSeeds(player.getPlayer(), pitIdx);
-
-        logger.debug("Player {} did a turn {} pit, desk after the turn - {}",
-                player.getName(),
-                pitIdx,
-                desk.toString());
-
-        if(!desk.isBasket(lastProcessed)) {
-            nextPlayerTurn();
-        }
-
-        if(testEndGame(desk)){
-            finished.set(true);
-        }
-
-        notifyListeners();
-    }
-
-    protected int lastTurn(){
-        return lastTurn;
-    }
-
-    private void nextPlayerTurn() {
-        players.add(players.poll());
-    }
-
-    private boolean testEndGame(Desk desk) {
-
-        if(IntStream.range(0,desk.getMaxPlayers())
-            .map(i -> desk.getSeedsOnDeskForPlayer(i))
-            .anyMatch(seeds -> seeds==0)){
-            desk.processSeeds((idx, seeds) -> {
-                if(!desk.isBasket(idx) && seeds>0){
-                    desk.putIntoBasket(desk.getPitOwner(idx), idx);
-                }
-            });
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isStarted() {
-        return started.get();
-    }
-
-    public boolean isFinished() {
-        return finished.get();
-    }
-
-    public int getConfigPitsPerUser() {
-        return desk.getPitsPerPlayer();
-    }
-
-    public void disconnect(GamePlayer player){
-        logger.debug("Player '{}' has disconnected from the game", player.getName());
-        finish();
-    }
-
-    private void finish() {
-        if(finished.compareAndSet(false, true)) {
-            notifyListeners();
-        }
-    }
-
-    public int getTotalSeeds() {
-        return desk.getTotalSeedsOnDesk();
-    }
-
-    public String getPlayerName(int i) {
-        return players.stream()
-                .filter(player -> player.getPlayer()==i)
-                .map(player -> player.getName())
-                .findFirst().orElse(null);
-    }
+    /**
+     * Unregister from game notifications.
+     * @param listener listener to add
+     */
+    void removeGameListener(GameListener listener);
 }

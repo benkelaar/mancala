@@ -1,4 +1,6 @@
-package com.bol.mancala;
+package com.bol.mancala.impl;
+
+import com.bol.mancala.Desk;
 
 import java.util.Arrays;
 import java.util.function.BiConsumer;
@@ -8,7 +10,7 @@ import java.util.stream.IntStream;
 /**
  * Created by kopernik on 05/12/2017.
  */
-public class Desk6x6 implements Desk {
+public class DeskImpl implements Desk {
     private static final int DEFAULT_PITS_COUNT = 6;
     private static final byte DEFAULT_INITIAL_SEEDS = 6;
     private static final byte MAX_PLAYERS_COUNT = 2;
@@ -16,11 +18,11 @@ public class Desk6x6 implements Desk {
     private final int[] desk;
     private final int pitsPerPlayer;
 
-    public Desk6x6() {
+    public DeskImpl() {
         this(DEFAULT_PITS_COUNT, DEFAULT_INITIAL_SEEDS);
     }
 
-    public Desk6x6(int pits, int initialSeeds) {
+    public DeskImpl(int pits, int initialSeeds) {
         if (pits * MAX_PLAYERS_COUNT * initialSeeds > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Max seeds count is exeided");
         }
@@ -31,7 +33,7 @@ public class Desk6x6 implements Desk {
         }
     }
 
-    protected Desk6x6(int[] state) {
+    protected DeskImpl(int[] state) {
         if (state.length < 4 || state.length % 2 != 0) {
             throw new IllegalArgumentException("Wrong desk state. Should be at least 2 pits and 2 baskets");
         }
@@ -39,7 +41,6 @@ public class Desk6x6 implements Desk {
         desk = Arrays.copyOf(state, state.length);
     }
 
-    @Override
     public boolean isBasket(int globalPit) {
         return (globalPit + 1) % (pitsPerPlayer + 1) == 0;
     }
@@ -50,7 +51,6 @@ public class Desk6x6 implements Desk {
         return desk[getPlayersPit(player, pit)];
     }
 
-    @Override
     public int getSeeds(int globalPit) {
         return desk[globalPit];
     }
@@ -65,7 +65,6 @@ public class Desk6x6 implements Desk {
         return desk[getBasketIdx(player)];
     }
 
-    @Override
     public int getBasketIdx(int player) {
         return getPlayersPit(player, pitsPerPlayer);
     }
@@ -85,7 +84,6 @@ public class Desk6x6 implements Desk {
     }
 
 
-    @Override
     public int processSeeds(int player, int pit, BiFunction<Integer, Integer, Integer> processor,
                             BiConsumer<Integer, Integer> lastSeedProcessor) {
         checkPlayerRange(player);
@@ -122,8 +120,9 @@ public class Desk6x6 implements Desk {
     }
 
     @Override
-    public int processSeeds(int player, int pit) {
-        return processSeeds(player,
+    public boolean processSeeds(int player, int pit) {
+        int lastPitIdx =
+            processSeeds(player,
                 pit,
                 (i, seeds) -> i != getOppositePit(getBasketIdx(player)) ? 1 : 0,
                 (play, idx) -> {
@@ -135,28 +134,33 @@ public class Desk6x6 implements Desk {
                         putIntoBasket(play, getOppositePit(idx));
                     }
                 });
+        return getBasketIdx(player) == lastPitIdx;
     }
 
-    @Override
+
     public void processSeeds(BiConsumer<Integer, Integer> processor) {
         IntStream.range(0, desk.length).forEach(i -> processor.accept(i, desk[i]));
     }
 
-    @Override
     public void putIntoBasket(int player, int globalPit) {
         desk[getBasketIdx(player)] += desk[globalPit];
         desk[globalPit] = 0;
     }
 
-    @Override
     public int getPitOwner(int pit) {
         return pit / (pitsPerPlayer + 1);
     }
 
-    @Override
     public int getOppositePit(int pit) {
         return (pit+1)%(pitsPerPlayer+1) ==0?(pit + (pitsPerPlayer+1))%desk.length:
                 desk.length - pit -2;
+    }
+
+    @Override
+    public void putAllSeedsFromDeskToBaskets() {
+        IntStream.range(0, desk.length)
+                .filter(i -> !isBasket(i) && getSeeds(i)>0)
+                .forEach(i -> putIntoBasket(getPitOwner(i), i));
     }
 
     protected int[] getDesk() {

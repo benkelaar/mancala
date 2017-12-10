@@ -1,7 +1,8 @@
 package com.bol.mancala.web;
 
-import com.bol.mancala.Desk6x6;
+import com.bol.mancala.impl.DeskImpl;
 import com.bol.mancala.Game;
+import com.bol.mancala.impl.GameImpl;
 import com.bol.mancala.GamePlayer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +24,19 @@ public class WebGamePoolImpl implements WebGamePool {
     private Game gameWaitingForPlayer = null;
 
     @Override
-    public synchronized GamePlayer createGameForUser(String sessionId, GamePlayer player) {
+    public synchronized GamePlayer createGameForUser(String sessionId, String playerName) {
         GamePlayer serverPlayer = players.get(sessionId);
         if (serverPlayer != null) {
             return serverPlayer;
         }
         // find or create a game
         if (gameWaitingForPlayer == null) {
-            logger.info("Creating a game for player '{}'", player.getName());
+            logger.info("Creating a game for player '{}'", playerName);
             gameWaitingForPlayer = createGame();
-            serverPlayer = gameWaitingForPlayer.registerForGame(player);
+            serverPlayer = gameWaitingForPlayer.registerForGame(playerName);
         } else {
-            logger.info("Found already available game for player '{}'", player.getName());
-            serverPlayer = gameWaitingForPlayer.registerForGame(player);
+            logger.info("Found already available game for player '{}'", playerName);
+            serverPlayer = gameWaitingForPlayer.registerForGame(playerName);
             gameWaitingForPlayer = null;
         }
         players.put(sessionId, serverPlayer);
@@ -48,7 +49,7 @@ public class WebGamePoolImpl implements WebGamePool {
      * @return new game
      */
     protected Game createGame() {
-        return new Game(new Desk6x6());
+        return new GameImpl(new DeskImpl());
     }
 
     @Override
