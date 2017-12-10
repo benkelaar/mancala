@@ -1,35 +1,26 @@
 var socket = null;
 
-function setConnected(connected) {
-    $("#connect").prop("disabled", connected);
-    $("#disconnect").prop("disabled", !connected);
-    if (connected) {
-        $("#conversation").show();
-    }
-    else {
-        $("#conversation").hide();
-    }
-    $("#greetings").html("");
-}
-
 function connect() {
-    socket = new WebSocket('ws://' + window.location.host + '/ws');
+    var person = prompt("Please enter username", "");
+
+    socket = new WebSocket('ws://' + window.location.host + '/ws?'+person);
 
     // Add an event listener for when a connection is open
     socket.onopen = function() {
-      showGreeting('WebSocket connection opened. Ready to send messages.');
-      setConnected(true);
+      showMessage('WebSocket connection opened. Ready to send messages.');
     };
     socket.onclose = function (event) {
-        showGreeting("WebSocket closed.");
+        showMessage("WebSocket closed.");
+        alert("Game closed.");
     };
     // Add an event listener for when a message is received from the server
     socket.onmessage = function(event) {
-      showGreeting('Message received from server: ' + event.data);
+        showMessage('Message received from server: ' + event.data);
+        updateDesk(JSON.parse(event.data));
     };
 
     socket.onerror = function(error) {
-      showGreeting('Error: ' + error.message);
+        showMessage('Error: ' + error.message);
     };
 }
 
@@ -41,21 +32,56 @@ function disconnect() {
     console.log("Disconnected");
 }
 
-function sendPit() {
+function sendPit(idx) {
     // Send a message to the server
-    socket.send($("#name").val());
+    socket.send(idx);
 }
 
-function showGreeting(message) {
-    $("#greetings").append("<tr><td>" + message + "</td></tr>");
+function updateDesk(game){
+    $.map(game.yourSeeds, function(val, i) {
+        $("#my-"+i).html(val)
+    });
+    $.map(game.opponentSeeds, function(val, i) {
+            $("#opponent-"+i).html(val)
+        });
+    $("#my-basket").html(game.yourBasket);
+    $("#opponent-basket").html(game.opponentBasket);
+    $("#my-name").html(game.yourName);
+    $("#opponent-name").html(game.opponentName);
+    if(game.yourTurn) {
+        $.map(game.yourSeeds, function(val, i) {
+            $("#my-"+i).click(function(){ sendPit(i)});
+            $("#my-"+i).addClass("clickable");
+
+        });
+        $("#my-name").addClass("turn");
+        $("#opponent-name").removeClass("turn");
+    } else {
+        $.map(game.yourSeeds, function(val, i) {
+                    $("#my-"+i).unbind('click');
+                    $("#my-"+i).prop("onclick", null);
+                    $("#my-"+i).removeClass("clickable");
+        });
+        $("#my-name").removeClass("turn");
+        $("#opponent-name").addClass("turn");
+    }
+    if(game.gameFinished){
+        $("#opponent-name").removeClass("turn");
+        $("#my-name").removeClass("turn");
+        if(game.yourBasket+ game.opponentBasket !=game.totalSeeds){
+            alert("Game closed. Looks like your opponent has left.");
+        } else if (game.yourBasket>game.opponentBasket){
+            alert("Your win!");
+        } else {
+            alert("You lose (");
+        }
+    }
+}
+
+function showMessage(message) {
+    console.log(message);
 }
 
 $(function () {
     connect();
-    $("form").on('submit', function (e) {
-        e.preventDefault();
-    });
-    $( "#connect" ).click(function() { connect(); });
-    $( "#disconnect" ).click(function() { disconnect(); });
-    $( "#send" ).click(function() { sendPit(); });
 });

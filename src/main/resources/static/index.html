@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hello WebSocket</title>
-    <link href="/webjars/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <title>Mancala</title>
+    <link href="/app.css" rel="stylesheet">
     <script src="/webjars/jquery/jquery.min.js"></script>
     <script src="/webjars/sockjs-client/sockjs.min.js"></script>
     <script src="/webjars/stomp-websocket/stomp.min.js"></script>
@@ -12,40 +12,38 @@
 <noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
     enabled. Please enable
     Javascript and reload this page!</h2></noscript>
+
 <div id="main-content" class="container">
     <div class="row">
-        <div class="col-md-6">
-            <form class="form-inline">
-                <div class="form-group">
-                    <label for="connect">WebSocket connection:</label>
-                    <button id="connect" class="btn btn-default" type="submit">Connect</button>
-                    <button id="disconnect" class="btn btn-default" type="submit" disabled="disabled">Disconnect
-                    </button>
-                </div>
-            </form>
-        </div>
-        <div class="col-md-6">
-            <form class="form-inline">
-                <div class="form-group">
-                    <label for="name">What is your name?</label>
-                    <input type="text" id="name" class="form-control" placeholder="Your name here...">
-                </div>
-                <button id="send" class="btn btn-default" type="submit">Send</button>
-            </form>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-12">
-            <table id="conversation" class="table table-striped">
-                <thead>
-                <tr>
-                    <th>Greetings</th>
-                </tr>
-                </thead>
-                <tbody id="greetings">
-                </tbody>
-            </table>
-        </div>
+        <table id="desk">
+            <tr>
+                <td id="opponent-name" class="name" colspan="8"></td>
+            </tr>
+            <tr>
+                <td id="opponent-basket" class="basket" rowspan="3"></td>
+                <td id="opponent-5" class="pit"></td>
+                <td id="opponent-4" class="pit"></td>
+                <td id="opponent-3" class="pit"></td>
+                <td id="opponent-2" class="pit"></td>
+                <td id="opponent-1" class="pit"></td>
+                <td id="opponent-0" class="pit"></td>
+                <td id="my-basket" class="basket" rowspan="3"></td>
+            </tr>
+            <tr>
+                <td colspan="6"></td>
+            </tr>
+            <tr>
+                <td id="my-0" class="pit"></td>
+                <td id="my-1" class="pit"></td>
+                <td id="my-2" class="pit"></td>
+                <td id="my-3" class="pit"></td>
+                <td id="my-4" class="pit"></td>
+                <td id="my-5" class="pit"></td>
+            </tr>
+            <tr>
+                <td id="my-name" class="name" colspan="8"></td>
+            </tr>
+        </table>
     </div>
 </div>
 </body>

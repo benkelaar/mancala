@@ -1,0 +1,59 @@
+
+html, body {
+    height: 100%;
+    color: #f6f6f6;
+    font-family: 'Orienta', sans-serif;
+    font-size: 16px;
+    line-height: 24px;
+    margin: 0 0 24px;
+    text-align: center;
+}
+
+body {
+    background-image:    url(wood.jpg);
+    background-size:     cover;                      /* <------ */
+    background-repeat:   no-repeat;
+    background-position: center center;              /* optional, center the image */
+}
+table {
+    border-collapse: separate;
+    border-spacing: 4px;
+    margin: 0 auto;
+}
+
+td {
+    padding: 5px;
+    padding-right: 30px;
+    vertical-align: top;
+    text-align: center;
+    height: 50px;
+    width: 50px;
+}
+
+.pit, .basket {
+    background-color: rgba(255,255,255,0.2);
+    border: 1px solid lightgray;
+
+
+}
+
+#desk {
+    padding-top:150px;
+}
+
+.name {
+    font-size: 20px;
+    vertical-align: middle;
+}
+
+.turn {
+    font-size: 50px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.footer{
+    text-align: left;
+}

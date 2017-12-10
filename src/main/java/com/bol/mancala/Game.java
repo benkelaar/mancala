@@ -1,103 +1,145 @@
 package com.bol.mancala;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.logging.LoggingSystem;
 
 /**
  * Created by kopernik on 06/12/2017.
  */
 public class Game {
     private static final Logger logger = LoggerFactory.getLogger(Game.class);
+    private int firstTurn;
 
-    private Desk desk;
-    private int nextPlayerTurn;
-    private boolean started = false;
-    private boolean finished = false;
+    private Desk6x6 desk;
 
-    private GameUser firstUser = null;
-    private GameUser secondUser = null;
+    private volatile byte playersCount;
+    private AtomicBoolean started = new AtomicBoolean();
+    private AtomicBoolean finished = new AtomicBoolean();
 
-    private List<GameListener> listeners = new CopyOnWriteArrayList<>();
+    private ArrayBlockingQueue<GamePlayer> players = new ArrayBlockingQueue<>(2);
 
-    protected Game() {
+    public Game(Desk6x6 desk) {
+        this(desk, (int)(Math.random() * desk.getMaxPlayers()));
     }
 
-    public Game(Desk desk) {
-        this(desk, (int)(Math.random() * 2));
-    }
-
-    public Game(Desk desk, int firstTurn) {
+    public Game(Desk6x6 desk, int firstTurn) {
         this.desk = desk;
-        nextPlayerTurn = firstTurn;
+        this.firstTurn = firstTurn % desk.getMaxPlayers();
+        players = new ArrayBlockingQueue<>(desk.getMaxPlayers());
     }
 
-    public synchronized GameUser registerForGame(String name) {
-        if (firstUser == null) {
-            firstUser = new GameUser(this, 0, name);
-            checkStarted();
-            return firstUser;
-        } else if (secondUser == null) {
-            secondUser = new GameUser(this, 1, name);
-            checkStarted();
-            return secondUser;
+    public GamePlayer registerForGame(GamePlayer player) {
+        if(!players.offer(player)) {
+            throw new IllegalStateException("Game is fool");
         }
-        throw new IllegalStateException("Game is fool");
+        player.setGame(this);
+        player.setPlayer(playersCount++);
+        if(!checkStarted()){
+            player.stateChanged(this);
+        }
+        return player;
     }
 
-    private void checkStarted() {
-        started = firstUser != null && secondUser != null;
-        if(started){
+    private boolean checkStarted() {
+        boolean check = !started.get() && !finished.get() && players.size() == desk.getMaxPlayers();
+        if(check && this.started.compareAndSet(false, true)){
+            if(firstTurn>0){
+                nextPlayerTurn();
+            };
             notifyListeners();
+            return true;
         }
+        return false;
     }
 
     private void notifyListeners() {
-        listeners.stream().forEach(x -> x.stateChanged(this));
+        players.stream().forEach(x -> {
+            try{
+                x.stateChanged(this);
+            }catch (RuntimeException e) {
+                //its not our business, listener should'n produxe errors
+                logger.warn("Some problem in listeners", e);
+            }
+        });
     }
 
-    public boolean isPlayerTurn(int player) {
-        return started && !finished && nextPlayerTurn == player;
+    public boolean isPlayerTurn(GamePlayer player) {
+        return started.get() && !finished.get() && players.peek() == player;
     }
 
-    public synchronized int getSeedsOnTheDesk(){
+    public int getSeedsOnTheDesk(){
         return desk.getTotalSeedsOnDesk();
     }
 
-    public synchronized int getSeeds(int player, int pit){
-        return desk.getSeeds(player, pit);
+    protected int[] getPlayersPits(int player){
+        return IntStream.range(0, desk.getPitsPerPlayer())
+                .map(i -> desk.getSeeds(player, i))
+                .toArray();
     }
 
-    public synchronized int getBasket(int player) {
+    protected int opponentIdx(int player){
+        return (++player) % desk.getMaxPlayers();
+    }
+
+
+    public int getSeeds(GamePlayer player, int pit){
+        return desk.getSeeds(player.getPlayer(), pit);
+    }
+
+    public int getBasket(int player) {
         return desk.getBasket(player);
     }
 
-    protected synchronized Game turn(int player, int pitIdx) {
-        if (!started) {
+    private void checkPlayer(GamePlayer player) {
+        if(!players.contains(player)){
+            throw new IllegalArgumentException(
+                    String.format("Player '%s' do not play in this game", player.getName()));
+        }
+    }
+
+    protected synchronized void turn(GamePlayer player, int pitIdx) {
+        if (!started.get()) {
             throw new IllegalStateException("Waiting for users");
         }
         if (!isPlayerTurn(player)) {
             throw new IllegalArgumentException("It's not your turn");
         }
-        if (desk.getSeeds(player, pitIdx) == 0) {
-            return this;
+        if (desk.getSeeds(player.getPlayer(), pitIdx) == 0) {
+            return;
         }
 
-        int lastProcessed = desk.processSeeds(player, pitIdx);
+        int lastProcessed = desk.processSeeds(player.getPlayer(), pitIdx);
+
+        logger.debug("Player {} did a turn {} pit, desk after the turn - {}",
+                player.getName(),
+                pitIdx,
+                Arrays.toString(desk.getDesk()));
+
+        if(!desk.isBasket(lastProcessed)) {
+            nextPlayerTurn();
+        }
+
+        if(testEndGame(desk)){
+            finished.set(true);
+        }
+
         notifyListeners();
-        logger.debug("Player {} did a turn {} pit, desk after the turn - {}", player, pitIdx, Arrays.toString(desk.getDesk()));
-        nextPlayerTurn = desk.isBasket(lastProcessed)? nextPlayerTurn : desk.nextPlayer(player);
-        finished = testEndGame(desk);
-        return this;
+    }
+
+    private void nextPlayerTurn() {
+        players.add(players.poll());
     }
 
     private boolean testEndGame(Desk desk) {
-        if(desk.getSeedsOnDeskForPlayer(0)==0 ||
-                desk.getSeedsOnDeskForPlayer(1)== 0){
+
+        if(IntStream.range(0,desk.getMaxPlayers())
+            .map(i -> desk.getSeedsOnDeskForPlayer(i))
+            .anyMatch(seeds -> seeds==0)){
             desk.processSeeds((idx, seeds) -> {
                 if(!desk.isBasket(idx) && seeds>0){
                     desk.putIntoBasket(desk.getPitOwner(idx), idx);
@@ -109,31 +151,40 @@ public class Game {
     }
 
     public boolean isStarted() {
-        return started;
+        return started.get();
     }
 
     public boolean isFinished() {
-        return finished;
+        return finished.get();
     }
 
-    public synchronized int getConfigPitsPerUser() {
+    public int getConfigPitsPerUser() {
         return desk.getPitsPerPlayer();
     }
 
-    public synchronized void addGameListener(GameListener listener) {
-        listeners.add(listener);
-    }
-
-    public synchronized void disconnect(int player){
+    public void disconnect(GamePlayer player){
+        logger.debug("Player '{}' has disconnected from the game", player.getName());
         finish();
     }
 
     private void finish() {
-        finished = true;
-        notifyListeners();
+        if(finished.compareAndSet(false, true)) {
+            notifyListeners();
+        }
     }
 
     protected Desk getDesk() {
         return desk;
+    }
+
+    public int getTotalSeeds() {
+        return desk.getTotalSeedsOnDesk();
+    }
+
+    public String getPlayerName(int i) {
+        return players.stream()
+                .filter(player -> player.getPlayer()==i)
+                .map(player -> player.getName())
+                .findFirst().orElse("...");
     }
 }
