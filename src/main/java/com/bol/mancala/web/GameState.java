@@ -1,11 +1,17 @@
 package com.bol.mancala.web;
 
-import com.bol.mancala.Game;
 import com.bol.mancala.GamePlayer;
 
+/**
+ * Simple game state object to send updated to user's side.
+ * This class will be serialized by Json.
+ */
 public class GameState {
-    private String error= "";
-    private boolean gameStarted= false;
+    // use this field to send any errors descriptions to user
+    private String error = "";
+
+    // the rest field describe the current game's state
+    private boolean gameStarted = false;
     private boolean gameFinished = false;
     private boolean yourTurn = false;
     private String yourName;
@@ -18,7 +24,7 @@ public class GameState {
 
     public GameState(Throwable error, GamePlayer user) {
         this(user);
-        this.error=error.getLocalizedMessage();
+        this.error = error.getLocalizedMessage();
     }
 
     public GameState(GamePlayer player) {

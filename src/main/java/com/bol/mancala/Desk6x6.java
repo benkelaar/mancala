@@ -155,7 +155,7 @@ public class Desk6x6 implements Desk {
 
     @Override
     public int getOppositePit(int pit) {
-        return pit ==6 ||pit==13?(pit + (pitsPerPlayer+1))%desk.length:
+        return (pit+1)%(pitsPerPlayer+1) ==0?(pit + (pitsPerPlayer+1))%desk.length:
                 desk.length - pit -2;
     }
 
@@ -172,4 +172,10 @@ public class Desk6x6 implements Desk {
     public int getPitsPerPlayer() {
         return pitsPerPlayer;
     }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(desk);
+    }
 }
+

@@ -1,5 +1,9 @@
 package com.bol.mancala;
 
+/**
+ * API for a player to access to a game.
+ *
+ */
 public abstract class GamePlayer implements GameListener{
 
     private Game game;

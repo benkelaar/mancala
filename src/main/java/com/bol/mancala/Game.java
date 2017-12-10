@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.security.krb5.internal.crypto.Des;
 
 /**
  * Created by kopernik on 06/12/2017.
@@ -15,7 +16,7 @@ public class Game {
     private static final Logger logger = LoggerFactory.getLogger(Game.class);
     private int firstTurn;
 
-    private Desk6x6 desk;
+    private Desk desk;
 
     private volatile byte playersCount;
     private AtomicBoolean started = new AtomicBoolean();
@@ -23,11 +24,11 @@ public class Game {
 
     private ArrayBlockingQueue<GamePlayer> players = new ArrayBlockingQueue<>(2);
 
-    public Game(Desk6x6 desk) {
+    public Game(Desk desk) {
         this(desk, (int)(Math.random() * desk.getMaxPlayers()));
     }
 
-    public Game(Desk6x6 desk, int firstTurn) {
+    public Game(Desk desk, int firstTurn) {
         this.desk = desk;
         this.firstTurn = firstTurn % desk.getMaxPlayers();
         players = new ArrayBlockingQueue<>(desk.getMaxPlayers());
@@ -118,7 +119,7 @@ public class Game {
         logger.debug("Player {} did a turn {} pit, desk after the turn - {}",
                 player.getName(),
                 pitIdx,
-                Arrays.toString(desk.getDesk()));
+                desk.toString());
 
         if(!desk.isBasket(lastProcessed)) {
             nextPlayerTurn();
@@ -173,10 +174,6 @@ public class Game {
         }
     }
 
-    protected Desk getDesk() {
-        return desk;
-    }
-
     public int getTotalSeeds() {
         return desk.getTotalSeedsOnDesk();
     }
@@ -185,6 +182,6 @@ public class Game {
         return players.stream()
                 .filter(player -> player.getPlayer()==i)
                 .map(player -> player.getName())
-                .findFirst().orElse("...");
+                .findFirst().orElse(null);
     }
 }
