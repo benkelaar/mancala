@@ -19,6 +19,7 @@ public class Game {
     private Desk desk;
 
     private volatile byte playersCount;
+    private int lastTurn;
     private AtomicBoolean started = new AtomicBoolean();
     private AtomicBoolean finished = new AtomicBoolean();
 
@@ -114,6 +115,8 @@ public class Game {
             return;
         }
 
+        lastTurn = pitIdx;
+
         int lastProcessed = desk.processSeeds(player.getPlayer(), pitIdx);
 
         logger.debug("Player {} did a turn {} pit, desk after the turn - {}",
@@ -130,6 +133,10 @@ public class Game {
         }
 
         notifyListeners();
+    }
+
+    protected int lastTurn(){
+        return lastTurn;
     }
 
     private void nextPlayerTurn() {

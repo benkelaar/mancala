@@ -12,6 +12,12 @@ import org.springframework.web.socket.config.annotation.AbstractWebSocketMessage
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 
+/**
+ * Simple spring websocket configuration.
+ * Just one endpoint - 'http://server:port/ws'.
+ *
+ * @see WebGameSession
+ */
 @Configuration
 @EnableWebSocket
 public class WebSocketConfig implements WebSocketConfigurer {

@@ -16,38 +16,55 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebGamePoolImpl implements WebGamePool {
     private static final Logger logger = LoggerFactory.getLogger(WebGamePoolImpl.class);
 
-    private Map<String, GamePlayer> users = new ConcurrentHashMap<>();
+    private Map<String, GamePlayer> players = new ConcurrentHashMap<>();
+
+    // only one available game
+    // next new player will register for this game and go to players pool
     private Game gameWaitingForPlayer = null;
 
     @Override
-    public GamePlayer createGameForUser(String sessionId, GamePlayer player) {
-        logger.info("POOL");
-        GamePlayer user = users.get(sessionId);
-        if (user != null) {
-            return user;
+    public synchronized GamePlayer createGameForUser(String sessionId, GamePlayer player) {
+        GamePlayer serverPlayer = players.get(sessionId);
+        if (serverPlayer != null) {
+            return serverPlayer;
         }
-        synchronized (this) {
-            if (gameWaitingForPlayer == null) {
-                gameWaitingForPlayer = new Game(new Desk6x6());
-                user = gameWaitingForPlayer.registerForGame(player);
-            } else {
-                user = gameWaitingForPlayer.registerForGame(player);
-                gameWaitingForPlayer = null;
-            }
+        // find or create a game
+        if (gameWaitingForPlayer == null) {
+            logger.info("Creating a game for player '{}'", player.getName());
+            gameWaitingForPlayer = createGame();
+            serverPlayer = gameWaitingForPlayer.registerForGame(player);
+        } else {
+            logger.info("Found already available game for player '{}'", player.getName());
+            serverPlayer = gameWaitingForPlayer.registerForGame(player);
+            gameWaitingForPlayer = null;
         }
-        users.put(sessionId, user);
-        return user;
+        players.put(sessionId, serverPlayer);
+        return serverPlayer;
+    }
+
+    /**
+     * Here is an extension point.
+     * We can create any different game/desk implementation.
+     * @return new game
+     */
+    protected Game createGame() {
+        return new Game(new Desk6x6());
     }
 
     @Override
     public GamePlayer findUser(String sessionId) {
-        return users.get(sessionId);
+        GamePlayer serverPlayer = players.get(sessionId);
+        if (serverPlayer == null) {
+            throw new IllegalArgumentException("Cannot find player info for sessuinId = " + sessionId);
+        }
+        return serverPlayer;
     }
+
     @Override
     public void cleanupUserData(String sessionId) {
-        GamePlayer user = users.remove(sessionId);
-        if(user!=null){
-            user.disconnect();
+        GamePlayer serverPlayer = players.remove(sessionId);
+        if (serverPlayer != null) {
+            serverPlayer.disconnect();
         }
     }
 }

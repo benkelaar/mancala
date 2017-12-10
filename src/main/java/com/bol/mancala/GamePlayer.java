@@ -87,4 +87,8 @@ public abstract class GamePlayer implements GameListener{
     public int getTotalSeeds() {
         return game.getTotalSeeds();
     }
+
+    public int getLastTurn(){
+        return game.lastTurn();
+    }
 }

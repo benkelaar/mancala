@@ -10,7 +10,7 @@ import static org.mockito.Mockito.mock;
 public class GameStateTest {
 
     @Test
-    public void testCreate(){
+    public void testCreateStateWithException(){
         GamePlayer player = mock(GamePlayer.class);
         doReturn(true).when(player).isMyTurn();
         doReturn(true).when(player).isGameStarted();
@@ -35,5 +35,12 @@ public class GameStateTest {
         assertArrayEquals(player.getMySeeds(), state.getYourSeeds());
         assertArrayEquals(player.getOpponentSeeds(), state.getOpponentSeeds());
         assertEquals(player.getTotalSeeds(), state.getTotalSeeds());
+    }
+
+    @Test
+    public void testCreateStateWithoutUser(){
+        GameState state = new GameState(new RuntimeException("exception"), null);
+        assertEquals("exception", state.getError());
+        assertNull(state.getYourName());
     }
 }

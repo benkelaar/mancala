@@ -36,6 +36,10 @@ td {
     border: 1px solid lightgray;
 }
 
+.basket {
+    font-size: 25px;
+}
+
 #desk {
     padding-top:150px;
 }

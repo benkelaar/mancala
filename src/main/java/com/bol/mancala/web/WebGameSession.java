@@ -13,7 +13,16 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 /**
  * Session handler for player's game session.
- * There is only one handler for all requests, so lets avoid to store any state here.
+ * There is only one handler for all requests, so lets avoid storing any state here.
+ *
+ * General scenario:
+ * 1. Player connects to http://server:port/ws?username
+ * 2. We ask {@code gamePool} for an available game (new one or an existing). Also we will create
+ *    GameListener to notify user for any game state change.
+ * 3. Player should receive an API object {@link GameState} as feedback.
+ * 4. User can send a messages "pitIdx". We will parse them as number of pit he'd like to proceed.
+ * 5. If user is left the connection we will disconnect him from the game (second user will be notified).
+ *    Also we will cleanup the session information and listeners.
  *
  * @author nbogdanov
  */
@@ -25,9 +34,11 @@ public class WebGameSession extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        logger.info("Connection established sessionId = "+session.getId());
         String username = session.getUri().getQuery();
-        username = username==null || username.isEmpty()? "unknown" : username;
+        logger.info("Connection established (sessionId = '{}', username = '{}')", session.getId(), username);
+        username = username == null || username.isEmpty() ? "unknown" : username;
+
+        //create listener
         GamePlayer player = new GamePlayer(username) {
             @Override
             public void stateChanged(Game game) {
@@ -35,26 +46,34 @@ public class WebGameSession extends TextWebSocketHandler {
             }
         };
 
+        // register for some game
         gamePool.createGameForUser(session.getId(), player);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        logger.info("Connection closed "+session.getId());
+        logger.info("Connection closed (sessionId = '{}')", session.getId());
+        //just delete everything about this session
         gamePool.cleanupUserData(session.getId());
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        logger.info("message received "+message.getPayload());
-        GamePlayer user = gamePool.findUser(session.getId());
+        logger.info("Message received (sessionId = '{}', message = '{}')", session.getId(), message.getPayload());
+        GamePlayer user = null;
         try {
+            user = gamePool.findUser(session.getId());
             user.turn(Integer.parseInt(message.getPayload()));
         }catch (Exception e){
             sendGameState(session, new GameState(e, user));
         }
     }
 
+    /**
+     * Sending message back to user.
+     * @param session user's session
+     * @param state game state object
+     */
     protected void sendGameState(WebSocketSession session, GameState state){
         try {
             if(session.isOpen()) {

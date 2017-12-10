@@ -38,14 +38,14 @@ function sendPit(idx) {
 }
 
 function updateDesk(game){
-    $.map(game.yourSeeds, function(val, i) {
-        $("#my-"+i).html(val)
-    });
     $.map(game.opponentSeeds, function(val, i) {
-            $("#opponent-"+i).html(val)
-        });
-    $("#my-basket").html(game.yourBasket);
-    $("#opponent-basket").html(game.opponentBasket);
+        updateTdValue($("#opponent-"+i), val);
+    });
+    $.map(game.yourSeeds, function(val, i) {
+        updateTdValue($("#my-"+i), val);
+    });
+    updateTdValue($("#my-basket"), game.yourBasket);
+    updateTdValue($("#opponent-basket"), game.opponentBasket);
     $("#my-name").html(game.yourName);
     $("#opponent-name").html(game.opponentName);
     if(game.yourTurn) {
@@ -54,22 +54,26 @@ function updateDesk(game){
             $("#my-"+i).addClass("clickable");
 
         });
-        $("#my-name").addClass("turn");
-        $("#opponent-name").removeClass("turn");
+        if(game.gameStarted){
+            $("#my-name").addClass("turn");
+            $("#opponent-name").removeClass("turn");
+        }
     } else {
         $.map(game.yourSeeds, function(val, i) {
                     $("#my-"+i).unbind('click');
                     $("#my-"+i).prop("onclick", null);
                     $("#my-"+i).removeClass("clickable");
         });
-        $("#my-name").removeClass("turn");
-        $("#opponent-name").addClass("turn");
+        if(game.gameStarted){
+            $("#my-name").removeClass("turn");
+            $("#opponent-name").addClass("turn");
+        }
     }
     if(game.gameFinished){
         $("#opponent-name").removeClass("turn");
         $("#my-name").removeClass("turn");
         if(game.yourBasket+ game.opponentBasket !=game.totalSeeds){
-            alert("Game closed. Looks like your opponent has left.");
+            alert("Game closed.\nLooks like your opponent has left.\nTo start another game reload the page.");
         } else if (game.yourBasket>game.opponentBasket){
             alert("Your win!");
         } else {
@@ -78,8 +82,22 @@ function updateDesk(game){
     }
 }
 
+// update element with animation
+function updateTdValue(td, val){
+    if(!td.html() || td.html() != val){
+        td.html(val);
+        animate_bg(td, 10, 2);
+    }
+}
+
 function showMessage(message) {
     console.log(message);
+}
+
+function animate_bg(ele, from, to) {
+    ele.css("background-color", "rgba(255, 255, 255, " + (from += from > to ? -1 : 1) / 10 + ")");
+    if(from != to)
+        setTimeout(function() { animate_bg(ele, from, to) }, 100);
 }
 
 $(function () {

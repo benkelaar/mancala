@@ -21,6 +21,11 @@ public class GameState {
     private int yourBasket;
     private int[] opponentSeeds;
     private int opponentBasket;
+    private int lastTurn;
+
+    public GameState(Throwable exception) {
+        this.error = exception.getLocalizedMessage();
+    }
 
     public GameState(Throwable error, GamePlayer user) {
         this(user);
@@ -28,16 +33,21 @@ public class GameState {
     }
 
     public GameState(GamePlayer player) {
-        this.gameFinished = player.isGameFinished();
-        this.gameStarted = player.isGameStarted();
-        this.yourTurn = player.isMyTurn();
-        this.yourName = player.getName();
-        this.opponentName = player.getOpponentName();
-        this.yourSeeds = player.getMySeeds();
-        this.yourBasket = player.getBasket();
-        this.opponentSeeds = player.getOpponentSeeds();
-        this.opponentBasket = player.getOpponentBasket();
-        this.totalSeeds = player.getTotalSeeds();
+        if (player != null) {
+            this.gameFinished = player.isGameFinished();
+            this.gameStarted = player.isGameStarted();
+            this.yourTurn = player.isMyTurn();
+            this.yourName = player.getName();
+            this.opponentName = player.getOpponentName() == null ?
+                    "Waiting for second player..." :
+                    player.getOpponentName();
+            this.yourSeeds = player.getMySeeds();
+            this.yourBasket = player.getBasket();
+            this.opponentSeeds = player.getOpponentSeeds();
+            this.opponentBasket = player.getOpponentBasket();
+            this.totalSeeds = player.getTotalSeeds();
+            this.lastTurn = player.getLastTurn();
+        }
     }
 
     public String getError() {
@@ -126,5 +136,13 @@ public class GameState {
 
     public void setOpponentName(String opponentName) {
         this.opponentName = opponentName;
+    }
+
+    public int getLastTurn() {
+        return lastTurn;
+    }
+
+    public void setLastTurn(int lastTurn) {
+        this.lastTurn = lastTurn;
     }
 }
