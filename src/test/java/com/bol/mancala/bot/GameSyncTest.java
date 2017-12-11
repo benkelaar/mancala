@@ -2,11 +2,9 @@ package com.bol.mancala.bot;
 
 import static org.junit.Assert.assertEquals;
 
-import com.bol.mancala.GameListener;
 import com.bol.mancala.impl.DeskImpl;
 import com.bol.mancala.impl.GameImpl;
 import com.bol.mancala.GamePlayer;
-import com.bol.mancala.impl.GamePlayerImpl;
 import org.junit.Test;
 
 public class GameSyncTest {

@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebGamePoolImpl implements WebGamePool {
     private static final Logger logger = LoggerFactory.getLogger(WebGamePoolImpl.class);
 
-    private Map<String, GamePlayer> players = new ConcurrentHashMap<>();
+    private final Map<String, GamePlayer> players = new ConcurrentHashMap<>();
 
     // only one available game
     // next new player will register for this game and go to players pool
@@ -56,7 +56,7 @@ public class WebGamePoolImpl implements WebGamePool {
     public GamePlayer findUser(String sessionId) {
         GamePlayer serverPlayer = players.get(sessionId);
         if (serverPlayer == null) {
-            throw new IllegalArgumentException("Cannot find player info for sessuinId = " + sessionId);
+            throw new IllegalArgumentException("Cannot find player info for sessionId = " + sessionId);
         }
         return serverPlayer;
     }

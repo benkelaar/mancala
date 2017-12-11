@@ -11,9 +11,9 @@ import com.bol.mancala.GamePlayer;
  */
 public class GamePlayerImpl implements GamePlayer {
 
-    private GameImpl game;
-    private int player;
-    private String name;
+    private final GameImpl game;
+    private final int player;
+    private final String name;
 
     protected GamePlayerImpl(GameImpl game, String name, int idx) {
         this.game = game;

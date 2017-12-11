@@ -24,7 +24,7 @@ public class GameImpl implements Game {
     private static final Logger logger = LoggerFactory.getLogger(GameImpl.class);
 
     // desk to play
-    private Desk desk;
+    private final Desk desk;
 
     // index of a player from whom we expect the next turn
     private int nextPlayerTurn = 0;
@@ -38,9 +38,9 @@ public class GameImpl implements Game {
     private boolean started = false;
     private boolean finished = false;
 
-    private List<GameListener> listeners = new CopyOnWriteArrayList<>();
+    private final List<GameListener> listeners = new CopyOnWriteArrayList<>();
     // because we don't store the players objects we need to store their names somewhere
-    private List<String> playerNames = new ArrayList<>();
+    private final List<String> playerNames = new ArrayList<>();
 
     /**
      * Create game based on a desk (it might be some predefined state)

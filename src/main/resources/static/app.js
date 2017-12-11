@@ -1,6 +1,8 @@
 var socket = null;
 
 function connect() {
+    // before we connect to a server we nned to ask the user's name
+    // because we'd like to puch it with the connection
     var person = prompt("Please enter username", "");
 
     socket = new WebSocket('ws://' + window.location.host + '/ws?'+person);
@@ -9,10 +11,12 @@ function connect() {
     socket.onopen = function() {
       showMessage('WebSocket connection opened. Ready to send messages.');
     };
+
     socket.onclose = function (event) {
         showMessage("WebSocket closed.");
         alert("Game closed.");
     };
+
     // Add an event listener for when a message is received from the server
     socket.onmessage = function(event) {
         showMessage('Message received from server: ' + event.data);
@@ -32,12 +36,14 @@ function disconnect() {
     console.log("Disconnected");
 }
 
+// send pit index to the server
 function sendPit(idx) {
-    // Send a message to the server
     socket.send(idx);
 }
 
+// update the desk based on information we received
 function updateDesk(game){
+    //update all td's
     $.map(game.opponentSeeds, function(val, i) {
         updateTdValue($("#opponent-"+i), val);
     });
@@ -46,9 +52,14 @@ function updateDesk(game){
     });
     updateTdValue($("#my-basket"), game.yourBasket);
     updateTdValue($("#opponent-basket"), game.opponentBasket);
+
+    //update player's names
     $("#my-name").html(game.yourName);
     $("#opponent-name").html(game.opponentName);
+
     if(game.yourTurn) {
+        //here we'd like to enable/disable ability to click on TD's elements
+        // based on yourTurn value
         $.map(game.yourSeeds, function(val, i) {
             $("#my-"+i).click(function(){ sendPit(i)});
             $("#my-"+i).addClass("clickable");
@@ -69,7 +80,9 @@ function updateDesk(game){
             $("#opponent-name").addClass("turn");
         }
     }
+
     if(game.gameFinished){
+        //some scenario if game is finished
         $("#opponent-name").removeClass("turn");
         $("#my-name").removeClass("turn");
         if(game.yourBasket+ game.opponentBasket !=game.totalSeeds){

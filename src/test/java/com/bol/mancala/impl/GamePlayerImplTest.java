@@ -5,7 +5,6 @@ import com.bol.mancala.GamePlayer;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
 public class GamePlayerImplTest {

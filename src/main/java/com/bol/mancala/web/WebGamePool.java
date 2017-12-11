@@ -1,7 +1,6 @@
 package com.bol.mancala.web;
 
 import com.bol.mancala.GamePlayer;
-import com.bol.mancala.impl.GamePlayerImpl;
 
 /**
  * Here we'd like to store players.
