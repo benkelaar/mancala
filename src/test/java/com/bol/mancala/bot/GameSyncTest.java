@@ -14,7 +14,7 @@ public class GameSyncTest {
     @Test(timeout = 2000)
     public void test2BotsSync() {
         DeskImpl desk = new DeskImpl();
-        GameImpl game = new GameImpl(new DeskImpl());
+        GameImpl game = new GameImpl(desk);
 
         int pitsPerPlayer = desk.getPitsPerPlayer();
         int totalSeeds = desk.getTotalSeedsOnDesk();

@@ -5,7 +5,9 @@ import com.bol.mancala.GamePlayer;
 
 /**
  * API for a player to access to a game.
+ * Mostly its just a wrapper for {@link Game} object with player index.
  *
+ * @author nbogdanov
  */
 public class GamePlayerImpl implements GamePlayer {
 
@@ -20,12 +22,12 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public void turn(int pit) {
+    public void turn(int pit) throws IllegalStateException, IllegalArgumentException {
         game.turn(getPlayerId(), pit);
     }
 
     @Override
-    public int getSeeds(int pit){
+    public int getSeeds(int pit) {
         return game.getSeeds(getPlayerId(), pit);
     }
 
@@ -35,22 +37,22 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public boolean isMyTurn(){
+    public boolean isMyTurn() {
         return game.isPlayerTurn(getPlayerId());
     }
 
     @Override
-    public int[] getMySeeds(){
+    public int[] getMySeeds() {
         return game.getPlayersPits(player);
     }
 
     @Override
-    public int[] getOpponentSeeds(){
+    public int[] getOpponentSeeds() {
         return game.getPlayersPits(game.opponentIdx(getPlayerId()));
     }
 
     @Override
-    public int getOpponentBasket(){
+    public int getOpponentBasket() {
         return game.getBasket(game.opponentIdx(getPlayerId()));
     }
 
@@ -89,8 +91,8 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public int getLastTurn(){
-        return game.lastTurn();
+    public int getLastTurn() {
+        return game.getPreviousPitIdx();
     }
 
     @Override

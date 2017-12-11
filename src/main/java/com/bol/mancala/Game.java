@@ -27,6 +27,10 @@ public interface Game {
      */
     boolean isFinished();
 
+    /**
+     * Number of pits on a desk for each player (without baskets)
+     * @return number of pits
+     */
     int getPitsCountPerPlayer();
 
     /**

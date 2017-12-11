@@ -2,10 +2,7 @@ package com.bol.mancala.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import com.bol.mancala.Desk;
@@ -16,23 +13,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by kopernik on 06/12/2017.
+ * Game implementation.
+ * As the main purpose of the class is to synchronize player's calls we use
+ * synchronized methods to do this. There shouldn't be high load here as only 2 users play
+ * on a single game.
+ *
+ * @author nbogdanov
  */
 public class GameImpl implements Game {
     private static final Logger logger = LoggerFactory.getLogger(GameImpl.class);
 
+    // desk to play
     private Desk desk;
 
+    // index of a player from whom we expect the next turn
     private int nextPlayerTurn = 0;
 
+    //current players number
     private int playersCount = 0;
 
-    private int lastTurn;
+    // index of pit from previous turn
+    private int previousPitIdx;
 
     private boolean started = false;
     private boolean finished = false;
 
     private List<GameListener> listeners = new CopyOnWriteArrayList<>();
+    // because we don't store the players objects we need to store their names somewhere
     private List<String> playerNames = new ArrayList<>();
 
     /**
@@ -65,10 +72,22 @@ public class GameImpl implements Game {
         return player;
     }
 
-    private GamePlayer createGamePlayer(String name, int idx) {
-        return new GamePlayerImpl(this, name, idx);
+    /**
+     * Extension point to use different implementations for {@link GamePlayer}
+     * @param name player's name
+     * @param playerId player's index
+     * @return new player's object
+     */
+    private GamePlayer createGamePlayer(String name, int playerId) {
+        return new GamePlayerImpl(this, name, playerId);
     }
 
+    /**
+     * Check game is started.
+     * Also will notify listeners if state is changed.
+     *
+     * @return true/false
+     */
     private boolean checkStarted() {
         if(!started && !finished && playersCount == desk.getMaxPlayers()){
             started = true;
@@ -93,10 +112,6 @@ public class GameImpl implements Game {
         return started && !finished && playerId == nextPlayerTurn;
     }
 
-    protected synchronized int getSeedsOnTheDesk(){
-        return desk.getTotalSeedsOnDesk();
-    }
-
     protected synchronized int[] getPlayersPits(int player){
         return IntStream.range(0, desk.getPitsPerPlayer())
                 .map(i -> desk.getSeeds(player, i))
@@ -116,7 +131,13 @@ public class GameImpl implements Game {
         return desk.getBasket(player);
     }
 
-    protected synchronized void turn(int playerId, int pitIdx) {
+    /**
+     * Make a turn for a player.
+     *
+     * @param playerId player index
+     * @param pitIdx   pit index to process (if there are no seeds - nothing happens)
+     */
+    protected synchronized void turn(int playerId, int pitIdx) throws IllegalStateException, IllegalArgumentException{
         if (!started) {
             throw new IllegalStateException("Waiting for users");
         }
@@ -126,8 +147,8 @@ public class GameImpl implements Game {
         if (desk.getSeeds(playerId, pitIdx) == 0) {
             return;
         }
-
-        lastTurn = pitIdx;
+        // lets save pit index
+        previousPitIdx = pitIdx;
 
         if(!desk.processSeeds(playerId, pitIdx)) {
             changeTurn();
@@ -149,10 +170,16 @@ public class GameImpl implements Game {
         nextPlayerTurn = (++nextPlayerTurn) % desk.getMaxPlayers();
     }
 
-    protected synchronized int lastTurn(){
-        return lastTurn;
+    protected synchronized int getPreviousPitIdx(){
+        return previousPitIdx;
     }
 
+    /**
+     * Test game is end.
+     * There should be a player without seeds on his desk.
+     * @param desk desk
+     * @return true - the game is over, false - otherwise
+     */
     private boolean testEndGame(Desk desk) {
         if(IntStream.range(0,desk.getMaxPlayers())
             .map(i -> desk.getSeedsOnDeskForPlayer(i))

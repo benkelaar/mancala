@@ -1,9 +1,6 @@
 package com.bol.mancala.web;
 
-import com.bol.mancala.GameListener;
-import com.bol.mancala.impl.GameImpl;
 import com.bol.mancala.GamePlayer;
-import com.bol.mancala.impl.GamePlayerImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
