@@ -24,7 +24,6 @@ table {
 
 td {
     padding: 5px;
-    padding-right: 30px;
     vertical-align: top;
     text-align: center;
     height: 50px;
@@ -41,7 +40,7 @@ td {
 }
 
 #desk {
-    padding-top:150px;
+    padding-top:100px;
 }
 
 .name {
